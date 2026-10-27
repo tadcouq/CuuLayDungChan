@@ -26,7 +26,7 @@ export default function ClassForm({ item, onSave, onCancel }: { item?: ClassItem
   return <form onSubmit={submit} noValidate>
     <div className="eyebrow">QUẢN LÝ LỚP HỌC</div><h2>{item ? 'Chỉnh sửa lớp' : 'Thêm lớp mới'}</h2>
     <p className="muted">Điền thông tin để tạo lịch học trên bảng.</p>
-    <label>Tên lớp <span className="required">*</span><input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Ví dụ: Tiếng Anh B1" aria-invalid={!!errors.name} aria-describedby="name-error"/>{error('name')}</label>
+    <label>Tên lớp <span className="required">*</span><input autoFocus value={name} onChange={e => setName(e.target.value)} aria-invalid={!!errors.name} aria-describedby="name-error"/>{error('name')}</label>
     <label>Ngày bắt đầu <span className="required">*</span><input type="date" value={startDate} onChange={e => setStart(e.target.value)} aria-invalid={!!errors.startDate} aria-describedby="startDate-error"/>{error('startDate')}</label>
     <label>Ngày kết thúc <span className="required">*</span><input type="date" value={endDate} onChange={e => setEnd(e.target.value)} aria-invalid={!!errors.endDate} aria-describedby="endDate-error"/>{error('endDate')}</label>
     <label>Sĩ số<input type="number" min="0" step="1" value={count} onChange={e => setCount(e.target.value)} aria-invalid={!!errors.count} aria-describedby="count-error"/>{error('count')}</label>
