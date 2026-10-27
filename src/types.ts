@@ -8,6 +8,8 @@ export interface ClassItem {
   color: string;
   textColor: string;
   notes: string;
+  courseName: string;
+  previousClassId?: string;
 }
 export const validColor = (value: string) => /^#[0-9a-f]{6}$/i.test(value);
 export const PALETTE = ['#5368d6', '#16877d', '#b56528', '#9252b5', '#c14e70', '#357ca6'];

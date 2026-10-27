@@ -12,6 +12,7 @@ function App() {
   const [error, setError] = useState(initial.error);
   const [selectedId, setSelectedId] = useState<string>();
   const [editing, setEditing] = useState(false);
+  const [source, setSource] = useState<ClassItem>();
   const [formKey, setFormKey] = useState(0);
   const [pending, setPending] = useState<ClassItem[] | null>(null);
   const [notice, setNotice] = useState('');
@@ -24,7 +25,8 @@ function App() {
     catch { setError('Không lưu được vào trình duyệt. Hãy xuất JSON để giữ dữ liệu trước khi tải lại trang.'); }
   }, [items]);
   function update(next: ClassItem[]) { dirty.current = true; setItems(next); }
-  function reset() { setSelectedId(undefined); setEditing(false); setFormKey(k => k + 1); }
+  function reset() { setSelectedId(undefined); setEditing(false); setSource(undefined); setFormKey(k => k + 1); }
+  function selectClass(id: string) { setSelectedId(id); setEditing(false); setSource(undefined); }
   function importItems(mode: 'replace' | 'merge') {
     if (!pending) return;
     update(mode === 'replace' ? pending : [...new Map([...items, ...pending].map(c => [c.id, c])).values()]);
@@ -39,14 +41,14 @@ function App() {
     {error && <div className="banner warning" role="alert">{error}</div>}
     {notice && <div className="banner" role="status">{notice}<button aria-label="Đóng thông báo" onClick={() => setNotice('')}>×</button></div>}
     <main><aside className="panel">
-      {selected && !editing ? <ClassDetail item={selected} onEdit={() => setEditing(true)} onClose={reset} onDelete={() => { update(items.filter(c => c.id !== selected.id)); reset(); }}/>
-      : <ClassForm key={selected?.id ?? formKey} item={editing ? selected : undefined} defaultColor={PALETTE[items.length % PALETTE.length]} existingItems={items} onCancel={editing ? () => setEditing(false) : undefined} onSave={draft => {
+      {selected && !editing ? <ClassDetail item={selected} items={items} onSelect={selectClass} onContinue={() => { reset(); setSource(selected); }} onEdit={() => setEditing(true)} onClose={reset} onDelete={() => { update(items.filter(c => c.id !== selected.id)); reset(); }}/>
+      : <ClassForm key={selected?.id ?? formKey} item={editing ? selected : undefined} source={source} defaultColor={PALETTE[items.length % PALETTE.length]} existingItems={items} onCancel={editing ? () => setEditing(false) : source ? () => selectClass(source.id) : undefined} onSave={draft => {
         if (editing && selected) update(items.map(c => c.id === selected.id ? { ...c, ...draft } : c));
         else update([...items, { ...draft, id: crypto.randomUUID() }]);
         reset();
       }}/>}
       {selected && <button className="new-class" onClick={reset}>+ Thêm lớp mới</button>}
-    </aside><div className="workspace"><div className="workspace-heading"><div className="eyebrow">TỔNG QUAN LỊCH HỌC</div><p>Mỗi lớp một hàng. Mọi lịch học trong tầm mắt.</p></div><Gantt items={items} selectedId={selectedId} onSelect={id => { setSelectedId(id); setEditing(false); }}/><p className="workspace-note">Dữ liệu được lưu cục bộ trong trình duyệt này. Xuất JSON để sao lưu hoặc chuyển máy.</p></div></main>
+    </aside><div className="workspace"><div className="workspace-heading"><div className="eyebrow">TỔNG QUAN LỊCH HỌC</div><p>Mỗi lộ trình một hàng. Các đợt học tiếp hiển thị cùng lớp ban đầu.</p></div><Gantt items={items} selectedId={selectedId} onSelect={selectClass}/><p className="workspace-note">Dữ liệu được lưu cục bộ trong trình duyệt này. Xuất JSON để sao lưu hoặc chuyển máy.</p></div></main>
     {pending !== null && <div className="modal-backdrop" onKeyDown={e => { if (e.key === 'Escape') setPending(null); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="import-title"><h2 id="import-title">Nhập {pending.length} lớp học</h2><p>Ghi đè sẽ thay toàn bộ dữ liệu hiện tại. Gộp sẽ thêm lớp mới và cập nhật lớp có cùng ID bằng dữ liệu trong file.</p><div className="actions"><button autoFocus onClick={() => setPending(null)}>Hủy</button><button onClick={() => importItems('replace')}>Ghi đè</button><button className="primary" onClick={() => importItems('merge')}>Gộp dữ liệu</button></div></section></div>}
   </>;
 }

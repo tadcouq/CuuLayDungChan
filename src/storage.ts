@@ -18,6 +18,8 @@ export function parseImport(text: string): ClassItem[] {
     return { id: c.id, name: c.name.trim(), startDate: c.startDate, endDate: c.endDate, studentCount: c.studentCount,
       students: [...new Set((c.students ?? []).map(s => s.trim()).filter(Boolean))],
       notes: typeof c.notes === 'string' ? c.notes : '',
+      courseName: typeof c.courseName === 'string' ? c.courseName.trim() : '',
+      previousClassId: typeof c.previousClassId === 'string' && c.previousClassId !== c.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c.previousClassId) ? c.previousClassId : undefined,
       textColor: typeof c.textColor === 'string' && validColor(c.textColor) ? c.textColor : '#ffffff',
       color: typeof c.color === 'string' && validColor(c.color) ? c.color : PALETTE[i % PALETTE.length] };
   });
