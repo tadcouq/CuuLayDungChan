@@ -1,12 +1,16 @@
 import { useState, type FormEvent } from 'react';
-import { type ClassItem, parseStudents, validDate } from '../types';
-type Draft = Omit<ClassItem, 'id' | 'color'>;
-export default function ClassForm({ item, onSave, onCancel }: { item?: ClassItem; onSave: (draft: Draft) => void; onCancel?: () => void }) {
+import { type ClassItem, PALETTE, parseStudents, validDate, validColor } from '../types';
+type Draft = Omit<ClassItem, 'id'>;
+export default function ClassForm({ item, defaultColor = PALETTE[0], existingItems = [], onSave, onCancel }: { item?: ClassItem; defaultColor?: string; existingItems?: ClassItem[]; onSave: (draft: Draft) => void; onCancel?: () => void }) {
   const [name, setName] = useState(item?.name ?? '');
   const [startDate, setStart] = useState(item?.startDate ?? '');
   const [endDate, setEnd] = useState(item?.endDate ?? '');
   const [count, setCount] = useState(String(item?.studentCount ?? 0));
   const [text, setText] = useState(item?.students.join('\n') ?? '');
+  const [notes, setNotes] = useState(item?.notes ?? '');
+  const [color, setColor] = useState(item?.color ?? defaultColor);
+  const [textColor, setTextColor] = useState(item?.textColor ?? '#ffffff');
+  const usedColors = [...new Map(existingItems.map(c => [`${c.color.toLowerCase()}/${c.textColor.toLowerCase()}`, c])).values()];
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fileError, setFileError] = useState('');
   const students = parseStudents(text);
@@ -19,8 +23,10 @@ export default function ClassForm({ item, onSave, onCancel }: { item?: ClassItem
     if (!validDate(endDate)) next.endDate = 'Vui lòng chọn ngày kết thúc hợp lệ.';
     else if (endDate < startDate) next.endDate = 'Ngày kết thúc phải từ ngày bắt đầu trở đi.';
     if (!count.trim() || !Number.isSafeInteger(Number(count)) || Number(count) < 0) next.count = 'Sĩ số phải là số nguyên từ 0 trở lên.';
+    if (!validColor(color)) next.color = 'Nhập mã hex 6 ký tự, ví dụ #5368D6.';
+    if (!validColor(textColor)) next.textColor = 'Nhập mã hex 6 ký tự, ví dụ #FFFFFF.';
     setErrors(next);
-    if (!Object.keys(next).length) onSave({ name: name.trim(), startDate, endDate, studentCount: Number(count), students });
+    if (!Object.keys(next).length) onSave({ name: name.trim(), startDate, endDate, studentCount: Number(count), students, notes: notes.trim(), color: color.toLowerCase(), textColor: textColor.toLowerCase() });
   }
   const error = (key: string) => errors[key] && <span className="field-error" id={`${key}-error`} role="alert">{errors[key]}</span>;
   return <form onSubmit={submit} noValidate>
@@ -30,6 +36,19 @@ export default function ClassForm({ item, onSave, onCancel }: { item?: ClassItem
     <label>Ngày bắt đầu <span className="required">*</span><input type="date" value={startDate} onChange={e => setStart(e.target.value)} aria-invalid={!!errors.startDate} aria-describedby="startDate-error"/>{error('startDate')}</label>
     <label>Ngày kết thúc <span className="required">*</span><input type="date" value={endDate} onChange={e => setEnd(e.target.value)} aria-invalid={!!errors.endDate} aria-describedby="endDate-error"/>{error('endDate')}</label>
     <label>Sĩ số<input type="number" min="0" step="1" value={count} onChange={e => setCount(e.target.value)} aria-invalid={!!errors.count} aria-describedby="count-error"/>{error('count')}</label>
+    <label>Ghi chú <span className="optional">Tùy chọn</span><textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Khóa học, đặc điểm chung, lưu ý của lớp…"/></label>
+    <fieldset className="node-colors"><legend>Màu node trên sơ đồ</legend>
+      <p className="hint">Chọn nhanh một bộ màu hoặc nhập mã hex cho nền và chữ.</p>
+      <div className="color-presets" aria-label="Bảng màu chọn nhanh">{PALETTE.map(value => <button type="button" key={value} style={{ background: value, color: '#ffffff' }} aria-label={`Nền ${value}, chữ trắng`} aria-pressed={color.toLowerCase() === value && textColor.toLowerCase() === '#ffffff'} onClick={() => { setColor(value); setTextColor('#ffffff'); }}>Aa</button>)}</div>
+      {usedColors.length > 0 && <><p className="hint">Dùng lại màu của lớp đã tạo</p><div className="color-presets used-colors">{usedColors.map(c => <button type="button" key={`${c.color}/${c.textColor}`} title={`${c.name}: ${c.color} / ${c.textColor}`} aria-label={`Dùng màu của ${c.name}: nền ${c.color}, chữ ${c.textColor}`} style={{ background: c.color, color: c.textColor }} onClick={() => { setColor(c.color); setTextColor(c.textColor); }}>Aa</button>)}</div></>}
+      {([{ key: 'color', label: 'Màu nền', value: color, set: setColor, fallback: defaultColor }, { key: 'textColor', label: 'Màu chữ', value: textColor, set: setTextColor, fallback: '#ffffff' }]).map(field => <div className="color-field" key={field.key}>
+        <label htmlFor={`${field.key}-hex`}>{field.label}</label><div className="color-inputs">
+          <input type="color" aria-label={`Chọn ${field.label.toLowerCase()}`} value={validColor(field.value) ? field.value : field.fallback} onChange={e => field.set(e.target.value)}/>
+          <input id={`${field.key}-hex`} type="text" value={field.value} spellCheck={false} maxLength={7} placeholder="#FFFFFF" onChange={e => field.set(e.target.value)} aria-invalid={!!errors[field.key]} aria-describedby={`${field.key}-error`}/>
+        </div>{error(field.key)}
+      </div>)}
+      <div className="node-preview" style={{ background: validColor(color) ? color : defaultColor, color: validColor(textColor) ? textColor : '#ffffff' }}>{name.trim() || 'Xem trước tên lớp'}</div>
+    </fieldset>
     <label>Danh sách học viên <span className="optional">Tùy chọn</span><textarea rows={5} value={text} onChange={e => updateStudents(e.target.value)} placeholder={'Nguyễn An\nTrần Bình\nMỗi dòng một tên…'}/></label>
     <div className="file-row"><label className="upload">↑ Tải .txt / .csv<input type="file" accept=".txt,.csv,text/plain,text/csv" onChange={async e => {
       const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;

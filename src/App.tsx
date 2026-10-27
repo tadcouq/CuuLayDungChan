@@ -40,9 +40,9 @@ function App() {
     {notice && <div className="banner" role="status">{notice}<button aria-label="Đóng thông báo" onClick={() => setNotice('')}>×</button></div>}
     <main><aside className="panel">
       {selected && !editing ? <ClassDetail item={selected} onEdit={() => setEditing(true)} onClose={reset} onDelete={() => { update(items.filter(c => c.id !== selected.id)); reset(); }}/>
-      : <ClassForm key={selected?.id ?? formKey} item={editing ? selected : undefined} onCancel={editing ? () => setEditing(false) : undefined} onSave={draft => {
+      : <ClassForm key={selected?.id ?? formKey} item={editing ? selected : undefined} defaultColor={PALETTE[items.length % PALETTE.length]} existingItems={items} onCancel={editing ? () => setEditing(false) : undefined} onSave={draft => {
         if (editing && selected) update(items.map(c => c.id === selected.id ? { ...c, ...draft } : c));
-        else update([...items, { ...draft, id: crypto.randomUUID(), color: PALETTE[items.length % PALETTE.length] }]);
+        else update([...items, { ...draft, id: crypto.randomUUID() }]);
         reset();
       }}/>}
       {selected && <button className="new-class" onClick={reset}>+ Thêm lớp mới</button>}

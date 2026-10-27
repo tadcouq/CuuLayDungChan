@@ -6,7 +6,10 @@ export interface ClassItem {
   studentCount: number;
   students: string[];
   color: string;
+  textColor: string;
+  notes: string;
 }
+export const validColor = (value: string) => /^#[0-9a-f]{6}$/i.test(value);
 export const PALETTE = ['#5368d6', '#16877d', '#b56528', '#9252b5', '#c14e70', '#357ca6'];
 export const DAY = 86400000;
 export const day = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / DAY;

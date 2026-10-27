@@ -34,7 +34,7 @@ export default function Gantt({ items, selectedId, onSelect }: { items: ClassIte
             <button className={`row-label class-label ${selectedId === item.id ? 'selected' : ''}`} onClick={() => onSelect(item.id)}><span className="dot" style={{ background: item.color }}/><span><strong>{item.name}</strong><small>{item.studentCount} học viên</small></span></button>
             <div className={`timeline lane ${selectedId === item.id ? 'selected' : ''}`}>
               {ticks.map(t => <span key={t.start} className="grid-line" style={{ left: pos(t.start) }}/>) }
-              <button className="bar" style={{ left: pos(day(item.startDate)), width: `${(day(item.endDate) - day(item.startDate) + 1) / total * 100}%`, background: item.color }} onClick={() => onSelect(item.id)}
+              <button className="bar" style={{ left: pos(day(item.startDate)), width: `${(day(item.endDate) - day(item.startDate) + 1) / total * 100}%`, background: item.color, color: item.textColor }} onClick={() => onSelect(item.id)}
                 aria-label={`${item.name}, ${displayDate(item.startDate)} đến ${displayDate(item.endDate)}, ${item.studentCount} học viên`}
                 onMouseEnter={e => { const r = e.currentTarget.getBoundingClientRect(); setTooltip({ item, x: Math.max(8, Math.min(e.clientX, window.innerWidth - 296)), y: Math.max(8, Math.min(r.bottom + 8, window.innerHeight - 150)) }); }}
                 onMouseLeave={() => setTooltip(null)} onFocus={e => { const r = e.currentTarget.getBoundingClientRect(); setTooltip({ item, x: Math.max(8, Math.min(r.left, window.innerWidth - 296)), y: Math.max(8, Math.min(r.bottom + 8, window.innerHeight - 150)) }); }} onBlur={() => setTooltip(null)}><span>{item.name}</span></button>

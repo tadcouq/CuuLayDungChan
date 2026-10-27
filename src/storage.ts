@@ -1,4 +1,4 @@
-import { type ClassItem, PALETTE, validDate } from './types';
+import { type ClassItem, PALETTE, validDate, validColor } from './types';
 const KEY = 'class-gantt-v1';
 export function parseImport(text: string): ClassItem[] {
   const data: unknown = JSON.parse(text);
@@ -17,7 +17,9 @@ export function parseImport(text: string): ClassItem[] {
     ids.add(c.id);
     return { id: c.id, name: c.name.trim(), startDate: c.startDate, endDate: c.endDate, studentCount: c.studentCount,
       students: [...new Set((c.students ?? []).map(s => s.trim()).filter(Boolean))],
-      color: typeof c.color === 'string' && /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : PALETTE[i % PALETTE.length] };
+      notes: typeof c.notes === 'string' ? c.notes : '',
+      textColor: typeof c.textColor === 'string' && validColor(c.textColor) ? c.textColor : '#ffffff',
+      color: typeof c.color === 'string' && validColor(c.color) ? c.color : PALETTE[i % PALETTE.length] };
   });
 }
 export function loadClasses(): { items: ClassItem[]; error: string } {
